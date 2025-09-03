@@ -269,31 +269,27 @@ def on_mouse_move(ev):
             my = ev.clientY - rect.top
             pion.move(mx, my)
 
+class FakeMouseEvent:
+    def __init__(self, touch):
+        self.clientX = touch.clientX
+        self.clientY = touch.clientY
+
 # Doigt touche
 def on_touch_start(ev):
     # Empêcher le scroll
     ev.preventDefault()
     # Premier doit
     touch = ev.touches[0]
-
     # faux évènement
-    class FakeMouseEvent:
-        def __init__(self, touch):
-            self.clientX = touch.clientX
-            self.clientY = touch.clientY
     fake_event = FakeMouseEvent(touch)
     on_mouse_down(fake_event)
 
 # Doigt lâche
 def on_touch_end(ev):
     ev.preventDefault()
+    touch = ev.changedTouches[0]
     # faux évènement
-    class FakeMouseEvent:
-        def __init__(self):
-            self.clientX = 0
-            self.clientY = 0
-
-    fake_event = FakeMouseEvent()
+    fake_event = FakeMouseEvent(touch)
     on_mouse_up(fake_event)
 
 # Doigt bouge
@@ -302,10 +298,6 @@ def on_touch_move(ev):
     if ev.touches:
         touch = ev.touches[0]
         # faux évènement
-        class FakeMouseEvent:
-            def __init__(self, touch):
-                self.clientX = touch.clientX
-                self.clientY = touch.clientY
         fake_event = FakeMouseEvent(touch)
         on_mouse_move(fake_event)
 
