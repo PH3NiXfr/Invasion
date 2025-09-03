@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Jeu Brython PWA</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { margin: 0; background: #222; }
+        canvas { display: block; margin: auto; background: #fff; }
+    </style>
+</head>
+<body onload="brython()">
+    <canvas id="game" width="400" height="400"></canvas>
+
+    <!-- Brython -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js"></script>
+
+    <!-- Ton jeu -->
+    <script type="text/python" src="main.py"></script>
+
+    <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
+    }
+    </script>
+</body>
+</html>
