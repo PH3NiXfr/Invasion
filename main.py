@@ -10,8 +10,10 @@ canvas = document["game"]
 ctx = canvas.getContext("2d")
 width = canvas.width
 height = canvas.height
-dragging = False
+deplacement_piece = False
 listepieces = []
+listepions = []
+etape_de_jeu = 0
 
 # Classe pièce
 class Piece:
@@ -19,12 +21,13 @@ class Piece:
         self.points = []
         self.deplacement = False
         self.niveau = niveau
+        self.pion = None
         if niveau == 0:
-            self.couleur = "#4CAF50"
+            self.couleur = "#1F76DA"
         elif niveau == 1:
-            self.couleur = "#FFC107"
+            self.couleur = "#66FF00"
         elif niveau == 2:
-            self.couleur = "#F44336"
+            self.couleur = "#582900"
         # Calcul des points de l'hexagone
         for i in range(6):
             angle = math.pi / 3 * i - math.pi / 6  # rotation pour que l'hexagone pointe vers le haut
@@ -34,7 +37,7 @@ class Piece:
         self.pos = (x, y)
 
     # Déplacement d'une pièce de manière relative
-    def mouvePiece(self, new_x, new_y):
+    def move(self, new_x, new_y):
         dx = new_x - self.points[0][0]
         dy = new_y - self.points[0][1]
         self.points = [(x + dx + RADIUS, y + dy - RADIUS/2) for x, y in self.points]
@@ -49,11 +52,11 @@ class Piece:
             self.points.append((x, y + RADIUS))
         self.pos = (new_x, new_y)
         if niveau == 0:
-            self.couleur = "#4CAF50"
+            self.couleur = "#1F76DA"
         elif niveau == 1:
-            self.couleur = "#FFC107"
+            self.couleur = "#00FF55"
         elif niveau == 2:
-            self.couleur = "#F44336"
+            self.couleur = "#473700"
         self.niveau = niveau
     
     # Détection collision point dans polygone
@@ -79,20 +82,71 @@ class Piece:
         ctx.fill()
         ctx.strokeStyle = "#000000"
         ctx.stroke()
+    
+    # Recupération de la piece à la base
+    def getBase(self):
+        for piece in listepieces:
+            if piece.niveau == 0 and self.pos == piece.pos:
+                return piece
+            
+    # Recupération de la piece au sommet
+    def getTop(self):
+        piece_max = self
+        for piece in listepieces:
+            if self.pos == piece.pos and piece.niveau > piece_max.niveau:
+                piece_max = piece
+        return piece_max
+
+# Classe pion
+class Pion:
+    def __init__(self, case, equipe):
+        self.case = case
+        self.case.pion = self
+        self.equipe = equipe
+        self.deplacement = False
+        self.x = case.pos[0]
+        self.y = case.pos[1] + RADIUS
+
+    # Dessin d'un pion
+    def draw(self):
+        ctx.beginPath()
+        if not self.deplacement:
+            ctx.arc(self.case.pos[0], self.case.pos[1] + RADIUS, RADIUS/2, 0, 2 * math.pi)
+        else:
+            ctx.arc(self.x, self.y, RADIUS/2, 0, 2 * math.pi)
+        ctx.closePath()
+        if self.equipe == "rouge":
+            ctx.fillStyle = "#FF0000"
+        elif self.equipe == "bleu":
+            ctx.fillStyle = "#0000FF"
+        ctx.fill()
+        ctx.strokeStyle = "#000000"
+        ctx.stroke()
+    
+    # Détection collision point dans cercle
+    def iscollision(self, mx, my):
+        return self.case.iscollision(mx, my)
+
+    # Déplacement d'un pion
+    def move(self, new_x, new_y):
+        self.x = new_x
+        self.y = new_y
 
 # Contruction terrain
 cx = width / 2 - ((RADIUS * 0.85) * 2) * TAILLETERRAIN
 cy = height / 2
 for i in range(TAILLETERRAIN*2+1):
     for j in range(max(-i, -TAILLETERRAIN), min(TAILLETERRAIN + 1, TAILLETERRAIN*2 - i + 1)):
-        # Pieces du haut
+        # Pieces du haut + pion rouge
         if j == TAILLETERRAIN:
             listepieces.append(Piece(cx + j * RADIUS * 0.85, cy - j * RADIUS * 1.5, 0))
+            listepions.append(Pion(listepieces[len(listepieces)-1], "rouge"))
             listepieces.append(Piece(cx + j * RADIUS * 0.85, cy - j * RADIUS * 1.5, 1))
             listepieces.append(Piece(cx + j * RADIUS * 0.85, cy - j * RADIUS * 1.5, 2))
-        # Pieces du bas
+        # Pieces du bas + pion bleu
         elif j == -TAILLETERRAIN:
             listepieces.append(Piece(cx + j * RADIUS * 0.85, cy - j * RADIUS * 1.5, 0))
+            listepions.append(Pion(listepieces[len(listepieces)-1], "bleu"))
         # Pieces du milieu
         else:
             listepieces.append(Piece(cx + j * RADIUS * 0.85, cy - j * RADIUS * 1.5, 0))
@@ -101,6 +155,7 @@ for i in range(TAILLETERRAIN*2+1):
 
 # Dessin du jeu
 def draw():
+    # Pieces
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     for piece in listepieces:
         if piece.niveau == 0 and not piece.deplacement:
@@ -111,150 +166,148 @@ def draw():
     for piece in listepieces:
         if piece.niveau == 2 and not piece.deplacement:
             piece.draw()
+    # Pions
+    for pion in listepions:
+        pion.draw()
+    # Pièce en déplacement
     for piece in listepieces:
         if piece.deplacement:
             piece.draw()
 
 # Souris appuyée
 def on_mouse_down(ev):
-    global dragging
+    global deplacement_piece
     # Données de la souris
     rect = canvas.getBoundingClientRect()
     mx = ev.clientX - rect.left
     my = ev.clientY - rect.top
-    # Detection de la pièce cliquée (niveau 2)
-    for piece in listepieces:
-        if piece.niveau == 2:
-            if piece.iscollision(mx, my):
-                piece.deplacement = True
-                dragging = True
-                break
-    # Detection de la pièce cliquée (niveau 1)
-    if not dragging:
+    #Etape de jeu
+    if etape_de_jeu == 0 or etape_de_jeu == 2:
+        # Detection de la pièce cliquée (niveau 2)
         for piece in listepieces:
-            if piece.niveau == 1:
+            if piece.niveau == 2 and piece.getBase().pion is None:
                 if piece.iscollision(mx, my):
                     piece.deplacement = True
-                    dragging = True
+                    deplacement_piece = True
+                    break
+        # Detection de la pièce cliquée (niveau 1)
+        if not deplacement_piece:
+            for piece in listepieces:
+                if piece.niveau == 1 and piece.getBase().pion is None:
+                    if piece.iscollision(mx, my):
+                        piece.deplacement = True
+                        deplacement_piece = True
+                        break
+    else:
+        # Detection du pion cliqué
+        for pion in listepions:
+            if pion.case.iscollision(mx, my):
+                if pion.equipe == "rouge" and etape_de_jeu == 1 or pion.equipe == "bleu" and etape_de_jeu == 3:
+                    pion.deplacement = True
                     break
 
 # Souris relâchée
 def on_mouse_up(ev):
-    global dragging
-    dragging = False
+    global deplacement_piece
+    deplacement_piece = False
     # Detection de la pièce relâchée
     for piece in listepieces:
         if piece.deplacement:
             piece_cible_trouvee = False
-            # Detection de la pièce cible (niveau 1)
+            # Detection de la pièce cible
             for piece_cible in listepieces:
-                if piece_cible.niveau == 1 and piece != piece_cible:
+                if piece_cible.getTop().niveau < 2 and piece.getTop() != piece_cible.getTop():
                     rect = canvas.getBoundingClientRect()
                     mx = ev.clientX - rect.left
                     my = ev.clientY - rect.top
                     if piece_cible.iscollision(mx, my):
                         # Deplacement de la pièce
-                        piece.setPiece(piece_cible.pos[0], piece_cible.pos[1], 2)
+                        piece.setPiece(piece_cible.pos[0], piece_cible.pos[1], piece_cible.getTop().niveau + 1)
                         piece_cible_trouvee = True
-                        break
-            # Detection de la pièce cible (niveau 0)
-            for piece_cible in listepieces:
-                if piece_cible.niveau == 0 and piece != piece_cible and not piece_cible_trouvee:
-                    rect = canvas.getBoundingClientRect()
-                    mx = ev.clientX - rect.left
-                    my = ev.clientY - rect.top
-                    if piece_cible.iscollision(mx, my):
-                        # Deplacement de la pièce
-                        piece.setPiece(piece_cible.pos[0], piece_cible.pos[1], 1)
-                        piece_cible_trouvee = True
+                        etape_suivante()
                         break
             if not piece_cible_trouvee:
                 piece.setPiece(piece.pos[0], piece.pos[1], piece.niveau)
             piece.deplacement = False
+    for pion in listepions:
+        if pion.deplacement:
+            for piece_cible in listepieces:
+                if pion.equipe == "rouge" and piece_cible.getTop().niveau == 2 or pion.equipe == "bleu" and piece_cible.getTop().niveau == 0:
+                    rect = canvas.getBoundingClientRect()
+                    mx = ev.clientX - rect.left
+                    my = ev.clientY - rect.top
+                    if piece_cible.iscollision(mx, my) and piece_cible.getBase().pion is None:
+                        # Deplacement du pion
+                        pion.case.pion = None
+                        pion.case = piece_cible.getBase()
+                        pion.deplacement = False
+                        piece_cible.getBase().pion = pion
+                        etape_suivante()
+                        break
+
+def etape_suivante():
+    global etape_de_jeu
+    if etape_de_jeu < 3:
+        etape_de_jeu += 1
+    else:
+        etape_de_jeu = 0
 
 # Souris bouge
 def on_mouse_move(ev):
     global x, y
-    if dragging:
-        rect = canvas.getBoundingClientRect()
+    rect = canvas.getBoundingClientRect()
+    if deplacement_piece:
         # Déplacement de la pièce
         for piece in listepieces:
             if piece.deplacement:
                 mx = ev.clientX - rect.left
                 my = ev.clientY - rect.top
-                piece.mouvePiece(mx, my)
+                piece.move(mx, my)
+    for pion in listepions:
+        if pion.deplacement:
+            mx = ev.clientX - rect.left
+            my = ev.clientY - rect.top
+            pion.move(mx, my)
 
 # Doigt touche
 def on_touch_start(ev):
-    global dragging
-    # Données du tactile
-    rect = canvas.getBoundingClientRect()
+    # Empêcher le scroll
+    ev.preventDefault()
+    # Premier doit
     touch = ev.touches[0]
-    mx = touch.clientX - rect.left
-    my = touch.clientY - rect.top
-    # Detection de la pièce touchée (niveau 2)
-    for piece in listepieces:
-        if piece.niveau == 2:
-            if piece.iscollision(mx, my):
-                piece.deplacement = True
-                dragging = True
-                break
-    # Detection de la pièce touchée (niveau 1)
-    if not dragging:
-        for piece in listepieces:
-            if piece.niveau == 1:
-                if piece.iscollision(mx, my):
-                    piece.deplacement = True
-                    dragging = True
-                    break
+
+    # faux évènement
+    class FakeMouseEvent:
+        def __init__(self, touch):
+            self.clientX = touch.clientX
+            self.clientY = touch.clientY
+    fake_event = FakeMouseEvent(touch)
+    on_mouse_down(fake_event)
 
 # Doigt lâche
 def on_touch_end(ev):
-    global dragging
-    dragging = False
-    # Detection de la pièce relâchée
-    for piece in listepieces:
-        if piece.deplacement:
-            piece_cible_trouvee = False
-            # Detection de la pièce cible (niveau 1)
-            for piece_cible in listepieces:
-                if piece_cible.niveau == 1 and piece != piece_cible:
-                    rect = canvas.getBoundingClientRect()
-                    mx = ev.clientX - rect.left
-                    my = ev.clientY - rect.top
-                    if piece_cible.iscollision(mx, my):
-                        # Deplacement de la pièce
-                        piece.setPiece(piece_cible.pos[0], piece_cible.pos[1], 2)
-                        piece_cible_trouvee = True
-                        break
-            # Detection de la pièce cible (niveau 0)
-            for piece_cible in listepieces:
-                if piece_cible.niveau == 0 and piece != piece_cible and not piece_cible_trouvee:
-                    rect = canvas.getBoundingClientRect()
-                    mx = ev.clientX - rect.left
-                    my = ev.clientY - rect.top
-                    if piece_cible.iscollision(mx, my):
-                        # Deplacement de la pièce
-                        piece.setPiece(piece_cible.pos[0], piece_cible.pos[1], 1)
-                        piece_cible_trouvee = True
-                        break
-            if not piece_cible_trouvee:
-                piece.setPiece(piece.pos[0], piece.pos[1], piece.niveau)
-            piece.deplacement = False
     ev.preventDefault()
+    # faux évènement
+    class FakeMouseEvent:
+        def __init__(self):
+            self.clientX = 0
+            self.clientY = 0
+
+    fake_event = FakeMouseEvent()
+    on_mouse_up(fake_event)
 
 # Doigt bouge
 def on_touch_move(ev):
-    global x, y
-    if dragging:
-        rect = canvas.getBoundingClientRect()
-        touch = ev.touches[0]
-        mx = touch.clientX - rect.left
-        my = touch.clientY - rect.top
-        for piece in listepieces:
-            if piece.deplacement:
-                piece.mouvePiece(mx, my)
     ev.preventDefault()
+    if ev.touches:
+        touch = ev.touches[0]
+        # faux évènement
+        class FakeMouseEvent:
+            def __init__(self, touch):
+                self.clientX = touch.clientX
+                self.clientY = touch.clientY
+        fake_event = FakeMouseEvent(touch)
+        on_mouse_move(fake_event)
 
 # Evenements souris
 canvas.bind("mousedown", on_mouse_down)
