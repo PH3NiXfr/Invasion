@@ -28,6 +28,11 @@ def resize(ev=None):
     # Adapter aussi la taille CSS pour qu’il apparaisse bien centré/visible
     canvas.style.width = f"{new_size}px"
     canvas.style.height = f"{new_size}px"
+    
+    # Centre le canvas en position absolue
+    canvas.style.position = "absolute"
+    canvas.style.left = f"{(screen_w - new_size)/2}px"
+    canvas.style.top  = f"{(screen_h - new_size)/2}px"
 
     vraisTaille = new_size
 
