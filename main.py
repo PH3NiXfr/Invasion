@@ -1,4 +1,4 @@
-from browser import document, timer
+from browser import document, timer, window
 import math
 
 # Données
@@ -7,9 +7,12 @@ RADIUS = 20
 
 # Init du jeu
 canvas = document["game"]
+canvas.style.background = "#FF9090"
 ctx = canvas.getContext("2d")
 width = canvas.width
 height = canvas.height
+
+# Variables globales
 deplacement_piece = False
 listepieces = []
 listepions = []
@@ -106,6 +109,10 @@ class Pion:
         self.deplacement = False
         self.x = case.pos[0]
         self.y = case.pos[1] + RADIUS
+        if self.equipe == "rouge":
+            self.couleur = "#FF9090"
+        elif self.equipe == "bleu":
+            self.couleur = "#9090FF"
 
     # Dessin d'un pion
     def draw(self):
@@ -114,11 +121,8 @@ class Pion:
             ctx.arc(self.case.pos[0], self.case.pos[1] + RADIUS, RADIUS/2, 0, 2 * math.pi)
         else:
             ctx.arc(self.x, self.y, RADIUS/2, 0, 2 * math.pi)
+        ctx.fillStyle = self.couleur
         ctx.closePath()
-        if self.equipe == "rouge":
-            ctx.fillStyle = "#FF0000"
-        elif self.equipe == "bleu":
-            ctx.fillStyle = "#0000FF"
         ctx.fill()
         ctx.strokeStyle = "#000000"
         ctx.stroke()
@@ -231,26 +235,50 @@ def on_mouse_up(ev):
             piece.deplacement = False
     for pion in listepions:
         if pion.deplacement:
+            piece_cible_trouvee = False
             for piece_cible in listepieces:
                 if pion.equipe == "rouge" and piece_cible.getTop().niveau == 2 or pion.equipe == "bleu" and piece_cible.getTop().niveau == 0:
                     rect = canvas.getBoundingClientRect()
                     mx = ev.clientX - rect.left
                     my = ev.clientY - rect.top
-                    if piece_cible.iscollision(mx, my) and piece_cible.getBase().pion is None:
+                    if piece_cible.iscollision(mx, my) and piece_cible.getBase().pion is None and \
+                        (math.sqrt((pion.case.pos[0] - piece_cible.pos[0])**2 + (pion.case.pos[1] - piece_cible.pos[1])**2) < RADIUS * 2):
                         # Deplacement du pion
                         pion.case.pion = None
                         pion.case = piece_cible.getBase()
-                        pion.deplacement = False
                         piece_cible.getBase().pion = pion
+                        piece_cible_trouvee = True
                         etape_suivante()
                         break
+            if not piece_cible_trouvee:
+                pion.move(pion.case.pos[0], pion.case.pos[1] + RADIUS)
+            pion.deplacement = False
 
 def etape_suivante():
     global etape_de_jeu
-    if etape_de_jeu < 3:
-        etape_de_jeu += 1
+    if etape_de_jeu == 0:
+        etape_de_jeu = 1
+        for pion in listepions:
+            if pion.equipe == "rouge":
+                pion.couleur = "#FF0000"
+    elif etape_de_jeu == 1:
+        etape_de_jeu = 2
+        # Changer la couleur du canvas
+        for pion in listepions:
+            if pion.equipe == "rouge":
+                pion.couleur = "#FF9090"
+        canvas.style.background = "#9090FF"
+    elif etape_de_jeu == 2:
+        for pion in listepions:
+            if pion.equipe == "bleu":
+                pion.couleur = "#0000FF"
+        etape_de_jeu = 3
     else:
         etape_de_jeu = 0
+        for pion in listepions:
+            if pion.equipe == "bleu":
+                pion.couleur = "#9090FF"
+        canvas.style.background = "#FF9090"
 
 # Souris bouge
 def on_mouse_move(ev):
