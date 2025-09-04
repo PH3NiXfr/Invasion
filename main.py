@@ -1,4 +1,4 @@
-from browser import document, timer, window
+from browser import document, timer, window, bind
 import math
 
 # Init du jeu
@@ -7,29 +7,37 @@ TAILLETERRAIN = NOMBREPIONS - 1
 canvas = document["game"]
 canvas.style.background = "#FF9090"
 ctx = canvas.getContext("2d")
+vraisTaille = 400
 
 # Choisir un ratio fixe
 def resize(ev=None):
+    global vraisTaille
+
+    # Largeur/hauteur visibles en CSS pixels
     screen_w = window.innerWidth
     screen_h = window.innerHeight
 
-    # Calcul de la taille max sans casser le ratio
-    if screen_w / screen_h > 1:
-        # Trop large → on limite par la hauteur
-        new_h = screen_h
-        new_w = screen_h
-    else:
-        # Trop haut → on limite par la largeur
-        new_w = screen_w
-        new_h = screen_w
+    # Taille carrée qui tient dans l’écran
+    new_size = min(screen_w, screen_h)
 
-    # Mise à jour du canvas
-    canvas.width = new_w
-    canvas.height = new_h
+    # Si tu veux que ce soit net sur mobile HD/Retina
+    ratio = window.devicePixelRatio or 1
+    canvas.width = int(new_size * ratio)
+    canvas.height = int(new_size * ratio)
 
-# Ajustement
+    # Adapter aussi la taille CSS pour qu’il apparaisse bien centré/visible
+    canvas.style.width = f"{new_size}px"
+    canvas.style.height = f"{new_size}px"
+
+    vraisTaille = new_size
+
+# Premier ajustement
 resize()
-window.bind("resize", resize)
+
+# Mise à jour automatique quand on change la taille (rotation mobile incluse)
+@bind(window, "resize")
+def on_resize(ev):
+    resize(ev)
 
 # Taille des pièces
 RADIUS = canvas.width / (TAILLETERRAIN * 4 + 2)
@@ -230,8 +238,8 @@ def on_mouse_down(ev):
     global deplacement_piece
     # Données de la souris
     rect = canvas.getBoundingClientRect()
-    mx = (ev.clientX - rect.left)*(400/607)
-    my = (ev.clientY - rect.top)*(400/607)
+    mx = (ev.clientX - rect.left)*(400/vraisTaille)
+    my = (ev.clientY - rect.top)*(400/vraisTaille)
     #Etape de jeu
     if etape_de_jeu == 0 or etape_de_jeu == 2:
         # Detection de la pièce cliquée (niveau 2)
@@ -269,8 +277,8 @@ def on_mouse_up(ev):
             for piece_cible in listepieces:
                 if piece_cible.getTop().niveau < 2 and piece.getTop() != piece_cible.getTop():
                     rect = canvas.getBoundingClientRect()
-                    mx = (ev.clientX - rect.left)*(400/607)
-                    my = (ev.clientY - rect.top)*(400/607)
+                    mx = (ev.clientX - rect.left)*(400/vraisTaille)
+                    my = (ev.clientY - rect.top)*(400/vraisTaille)
                     if piece_cible.iscollision(mx, my):
                         # Deplacement de la pièce
                         piece.setPiece(piece_cible.pos[0], piece_cible.pos[1], piece_cible.getTop().niveau + 1)
@@ -286,8 +294,8 @@ def on_mouse_up(ev):
             for piece_cible in listepieces:
                 if pion.equipe == "rouge" and piece_cible.getTop().niveau == 2 or pion.equipe == "bleu" and piece_cible.getTop().niveau == 0:
                     rect = canvas.getBoundingClientRect()
-                    mx = (ev.clientX - rect.left)*(400/607)
-                    my = (ev.clientY - rect.top)*(400/607)
+                    mx = (ev.clientX - rect.left)*(400/vraisTaille)
+                    my = (ev.clientY - rect.top)*(400/vraisTaille)
                     if piece_cible.iscollision(mx, my) and piece_cible.getBase().pion is None and \
                         (math.sqrt((pion.case.pos[0] - piece_cible.pos[0])**2 + (pion.case.pos[1] - piece_cible.pos[1])**2) < RADIUS * 2):
                         # Deplacement du pion
@@ -335,13 +343,13 @@ def on_mouse_move(ev):
         # Déplacement de la pièce
         for piece in listepieces:
             if piece.deplacement:
-                mx = (ev.clientX - rect.left)*(400/607)
-                my = (ev.clientY - rect.top)*(400/607)
+                mx = (ev.clientX - rect.left)*(400/vraisTaille)
+                my = (ev.clientY - rect.top)*(400/vraisTaille)
                 piece.move(mx, my)
     for pion in listepions:
         if pion.deplacement:
-            mx = (ev.clientX - rect.left)*(400/607)
-            my = (ev.clientY - rect.top)*(400/607)
+            mx = (ev.clientX - rect.left)*(400/vraisTaille)
+            my = (ev.clientY - rect.top)*(400/vraisTaille)
             pion.move(mx, my)
 
 class FakeMouseEvent:
