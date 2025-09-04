@@ -1,22 +1,54 @@
 from browser import document, timer, window
 import math
 
-# Données
-TAILLETERRAIN = 2
-RADIUS = 20
-
 # Init du jeu
+NOMBREPIONS = 4
+TAILLETERRAIN = NOMBREPIONS - 1
 canvas = document["game"]
 canvas.style.background = "#FF9090"
 ctx = canvas.getContext("2d")
-width = canvas.width
-height = canvas.height
+
+# Choisir un ratio fixe
+def resize(ev=None):
+    screen_w = window.innerWidth
+    screen_h = window.innerHeight
+
+    # Calcul de la taille max sans casser le ratio
+    if screen_w / screen_h > 1:
+        # Trop large → on limite par la hauteur
+        new_h = screen_h
+        new_w = screen_h
+    else:
+        # Trop haut → on limite par la largeur
+        new_w = screen_w
+        new_h = screen_w
+
+    # Mise à jour du canvas
+    canvas.width = new_w
+    canvas.height = new_h
+
+# Ajustement
+resize()
+window.bind("resize", resize)
+
+# Taille des pièces
+RADIUS = canvas.width / (TAILLETERRAIN * 4 + 2)
 
 # Variables globales
 deplacement_piece = False
 listepieces = []
 listepions = []
 etape_de_jeu = 0
+
+# Chargement des images
+img_montagne = window.Image.new()
+img_montagne.src = "montagne.png"
+
+img_plaine = window.Image.new()
+img_plaine.src = "plaine.png"
+
+img_ocean = window.Image.new()
+img_ocean.src = "ocean.png"
 
 # Classe pièce
 class Piece:
@@ -26,11 +58,11 @@ class Piece:
         self.niveau = niveau
         self.pion = None
         if niveau == 0:
-            self.couleur = "#1F76DA"
+            self.image = img_ocean
         elif niveau == 1:
-            self.couleur = "#66FF00"
+            self.image = img_plaine
         elif niveau == 2:
-            self.couleur = "#582900"
+            self.image = img_montagne
         # Calcul des points de l'hexagone
         for i in range(6):
             angle = math.pi / 3 * i - math.pi / 6  # rotation pour que l'hexagone pointe vers le haut
@@ -55,11 +87,11 @@ class Piece:
             self.points.append((x, y + RADIUS))
         self.pos = (new_x, new_y)
         if niveau == 0:
-            self.couleur = "#1F76DA"
+            self.image = img_ocean
         elif niveau == 1:
-            self.couleur = "#00FF55"
+            self.image = img_plaine
         elif niveau == 2:
-            self.couleur = "#473700"
+            self.image = img_montagne
         self.niveau = niveau
     
     # Détection collision point dans polygone
@@ -81,10 +113,25 @@ class Piece:
         for x, y in self.points[1:]:
             ctx.lineTo(x, y)
         ctx.closePath()
-        ctx.fillStyle = self.couleur
-        ctx.fill()
         ctx.strokeStyle = "#000000"
         ctx.stroke()
+
+        # Clip pour restreindre l’image à l’hexagone
+        ctx.save()
+        ctx.clip()
+
+        # Bounding box de l’hexagone
+        xs = [p[0] for p in self.points]
+        ys = [p[1] for p in self.points]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+
+        # Dessiner l’image dans la bounding box
+        ctx.imageSmoothingEnabled = True
+        ctx.imageSmoothingQuality = "high"
+        ctx.drawImage(self.image, min_x, min_y, max_x-min_x, max_y-min_y)
+
+        ctx.restore()
     
     # Recupération de la piece à la base
     def getBase(self):
@@ -137,8 +184,8 @@ class Pion:
         self.y = new_y
 
 # Contruction terrain
-cx = width / 2 - ((RADIUS * 0.85) * 2) * TAILLETERRAIN
-cy = height / 2
+cx = canvas.width / 2 - ((RADIUS * 0.85) * 2) * TAILLETERRAIN
+cy = canvas.height / 2
 for i in range(TAILLETERRAIN*2+1):
     for j in range(max(-i, -TAILLETERRAIN), min(TAILLETERRAIN + 1, TAILLETERRAIN*2 - i + 1)):
         # Pieces du haut + pion rouge
@@ -183,8 +230,8 @@ def on_mouse_down(ev):
     global deplacement_piece
     # Données de la souris
     rect = canvas.getBoundingClientRect()
-    mx = ev.clientX - rect.left
-    my = ev.clientY - rect.top
+    mx = (ev.clientX - rect.left)*(400/607)
+    my = (ev.clientY - rect.top)*(400/607)
     #Etape de jeu
     if etape_de_jeu == 0 or etape_de_jeu == 2:
         # Detection de la pièce cliquée (niveau 2)
@@ -222,8 +269,8 @@ def on_mouse_up(ev):
             for piece_cible in listepieces:
                 if piece_cible.getTop().niveau < 2 and piece.getTop() != piece_cible.getTop():
                     rect = canvas.getBoundingClientRect()
-                    mx = ev.clientX - rect.left
-                    my = ev.clientY - rect.top
+                    mx = (ev.clientX - rect.left)*(400/607)
+                    my = (ev.clientY - rect.top)*(400/607)
                     if piece_cible.iscollision(mx, my):
                         # Deplacement de la pièce
                         piece.setPiece(piece_cible.pos[0], piece_cible.pos[1], piece_cible.getTop().niveau + 1)
@@ -239,8 +286,8 @@ def on_mouse_up(ev):
             for piece_cible in listepieces:
                 if pion.equipe == "rouge" and piece_cible.getTop().niveau == 2 or pion.equipe == "bleu" and piece_cible.getTop().niveau == 0:
                     rect = canvas.getBoundingClientRect()
-                    mx = ev.clientX - rect.left
-                    my = ev.clientY - rect.top
+                    mx = (ev.clientX - rect.left)*(400/607)
+                    my = (ev.clientY - rect.top)*(400/607)
                     if piece_cible.iscollision(mx, my) and piece_cible.getBase().pion is None and \
                         (math.sqrt((pion.case.pos[0] - piece_cible.pos[0])**2 + (pion.case.pos[1] - piece_cible.pos[1])**2) < RADIUS * 2):
                         # Deplacement du pion
@@ -288,13 +335,13 @@ def on_mouse_move(ev):
         # Déplacement de la pièce
         for piece in listepieces:
             if piece.deplacement:
-                mx = ev.clientX - rect.left
-                my = ev.clientY - rect.top
+                mx = (ev.clientX - rect.left)*(400/607)
+                my = (ev.clientY - rect.top)*(400/607)
                 piece.move(mx, my)
     for pion in listepions:
         if pion.deplacement:
-            mx = ev.clientX - rect.left
-            my = ev.clientY - rect.top
+            mx = (ev.clientX - rect.left)*(400/607)
+            my = (ev.clientY - rect.top)*(400/607)
             pion.move(mx, my)
 
 class FakeMouseEvent:
