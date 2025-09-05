@@ -2,11 +2,11 @@ from browser import html
 import math
 
 # Chargement des images
-img_montagne = html.IMG(src="montagne.png")
+img_montagne = html.IMG(src="images/montagne.png")
 
-img_plaine = html.IMG(src="plaine.png")
+img_plaine = html.IMG(src="images/plaine.png")
 
-img_ocean = html.IMG(src="ocean.png")
+img_ocean = html.IMG(src="images/ocean.png")
 
 # Classe pièce
 class Piece:

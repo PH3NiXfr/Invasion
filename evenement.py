@@ -1,5 +1,3 @@
-import math
-
 class FakeMouseEvent:
     def __init__(self, touch):
         self.clientX = touch.clientX

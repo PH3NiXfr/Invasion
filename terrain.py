@@ -1,35 +1,37 @@
-import piece, pion
+import piece, pion, parametres
 import math
-
-TAILLETERRAIN = pion.NOMBREPIONS - 1
 
 class Terrain:
     def __init__(self, fenetreDeJeu):
-        self.radius = fenetreDeJeu.canvas.width / (TAILLETERRAIN * 4 + 2)
         self.fenetre = fenetreDeJeu
-        self.deplacement_piece = False
-        self.etape_de_jeu = 0
+        self.constructionTerrain()
+    
+    # Contruction terrain
+    def constructionTerrain(self):
         self.listepieces = []
         self.listepions = []
-        # Contruction terrain
-        cx = self.fenetre.canvas.width / 2 - ((self.radius * 0.85) * 2) * TAILLETERRAIN
+        self.etape_de_jeu = 0
+        self.tailleDuTerrain = int(parametres.parametresDeJeu["nombreDePion"]) - 1
+        self.radius = self.fenetre.canvas.width / (self.tailleDuTerrain * 4 + 2)
+        self.deplacement_piece = False
+        cx = self.fenetre.canvas.width / 2 - ((self.radius * 0.85) * 2) * self.tailleDuTerrain
         cy = self.fenetre.canvas.height / 2
-        for i in range(TAILLETERRAIN*2+1):
-            for j in range(max(-i, -TAILLETERRAIN), min(TAILLETERRAIN + 1, TAILLETERRAIN*2 - i + 1)):
+        for i in range(self.tailleDuTerrain*2+1):
+            for j in range(max(-i, -self.tailleDuTerrain), min(self.tailleDuTerrain + 1, self.tailleDuTerrain*2 - i + 1)):
                 # Pieces du haut + pion rouge
-                if j == TAILLETERRAIN:
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 0, self.radius, fenetreDeJeu))
-                    self.ajouter_pion(pion.Pion(self.listepieces[len(self.listepieces)-1], "rouge", self.radius, fenetreDeJeu))
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 1, self.radius, fenetreDeJeu))
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 2, self.radius, fenetreDeJeu))
+                if j == self.tailleDuTerrain:
+                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 0, self.radius, self.fenetre))
+                    self.ajouter_pion(pion.Pion(self.listepieces[len(self.listepieces)-1], "rouge", self.radius, self.fenetre))
+                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 1, self.radius, self.fenetre))
+                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 2, self.radius, self.fenetre))
                 # Pieces du bas + pion bleu
-                elif j == -TAILLETERRAIN:
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 0, self.radius, fenetreDeJeu))
-                    self.ajouter_pion(pion.Pion(self.listepieces[len(self.listepieces)-1], "bleu", self.radius, fenetreDeJeu))
+                elif j == -self.tailleDuTerrain:
+                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 0, self.radius, self.fenetre))
+                    self.ajouter_pion(pion.Pion(self.listepieces[len(self.listepieces)-1], "bleu", self.radius, self.fenetre))
                 # Pieces du milieu
                 else:
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 0, self.radius, fenetreDeJeu))
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 1, self.radius, fenetreDeJeu))
+                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 0, self.radius, self.fenetre))
+                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 1, self.radius, self.fenetre))
             cx += self.radius * 0.85 * 2
 
     def ajouter_piece(self, piece):
@@ -126,7 +128,7 @@ class Terrain:
                 pion.deplacement = False
     
     # Dessin du jeu
-    def draw(self):
+    def draw(self, boutonParam):
         # Pieces
         self.fenetre.ctx.clearRect(0, 0, self.fenetre.canvas.width, self.fenetre.canvas.height)
         for piece in self.listepieces:
@@ -145,3 +147,4 @@ class Terrain:
         for piece in self.listepieces:
             if piece.deplacement:
                 piece.draw()
+        boutonParam.draw()

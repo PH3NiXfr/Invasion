@@ -6,7 +6,7 @@ self.addEventListener("install", event => {
         "/index.html",
         "/main.py",
         "/manifest.json",
-        "/icon.png"
+        "/images/icon.png"
       ]);
     })
   );

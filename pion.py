@@ -1,7 +1,5 @@
 import math
 
-NOMBREPIONS = 4
-
 # Classe pion
 class Pion:
     def __init__(self, case, equipe, radius, fenetreDeJeu):
