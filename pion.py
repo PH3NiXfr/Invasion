@@ -17,10 +17,13 @@ class Pion:
             self.couleur = "#9090FF"
 
     # Dessin d'un pion
-    def draw(self):
+    def draw(self, listepieces):
         self.fenetre.ctx.beginPath()
         if not self.deplacement:
-            self.fenetre.ctx.arc(self.case.pos[0], self.case.pos[1] + self.radius, self.radius/2, 0, 2 * math.pi)
+            if self.equipe == "rouge":
+                self.fenetre.ctx.arc(self.case.getTop(listepieces).pos[0], self.case.getTop(listepieces).pos[1] + self.radius, self.radius/2, 0, 2 * math.pi)
+            else:
+                self.fenetre.ctx.arc(self.case.pos[0], self.case.pos[1] + self.radius, self.radius/2, 0, 2 * math.pi)
         else:
             self.fenetre.ctx.arc(self.x, self.y, self.radius/2, 0, 2 * math.pi)
         self.fenetre.ctx.fillStyle = self.couleur

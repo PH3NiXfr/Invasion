@@ -2,8 +2,10 @@ import piece, pion, parametres
 import math
 
 class Terrain:
-    def __init__(self, fenetreDeJeu):
+    def __init__(self, fenetreDeJeu, boutonParam, score):
         self.fenetre = fenetreDeJeu
+        self.boutonParam = boutonParam
+        self.score = score
         self.constructionTerrain()
     
     # Contruction terrain
@@ -12,10 +14,11 @@ class Terrain:
         self.listepions = []
         self.etape_de_jeu = 0
         self.tailleDuTerrain = int(parametres.parametresDeJeu["nombreDePion"]) - 1
+        self.score.valeur_score[2] = int(parametres.parametresDeJeu["nombreDeTours"]) + 1
         self.radius = self.fenetre.canvas.width / (self.tailleDuTerrain * 4 + 2)
         self.deplacement_piece = False
         cx = self.fenetre.canvas.width / 2 - ((self.radius * 0.85) * 2) * self.tailleDuTerrain
-        cy = self.fenetre.canvas.height / 2
+        cy = self.fenetre.canvas.height / 2 + self.radius
         for i in range(self.tailleDuTerrain*2+1):
             for j in range(max(-i, -self.tailleDuTerrain), min(self.tailleDuTerrain + 1, self.tailleDuTerrain*2 - i + 1)):
                 # Pieces du haut + pion rouge
@@ -33,6 +36,13 @@ class Terrain:
                     self.ajouter_piece(piece.Piece(cx, cy, i, j, 0, self.radius, self.fenetre))
                     self.ajouter_piece(piece.Piece(cx, cy, i, j, 1, self.radius, self.fenetre))
             cx += self.radius * 0.85 * 2
+        if self.boutonParam.fenetreParam.select_equipe.value == "rouge":
+            self.etape_de_jeu = 3
+            self.changer_etape()
+        else:
+            self.etape_de_jeu = 1
+            self.changer_etape()
+
 
     def ajouter_piece(self, piece):
         self.listepieces.append(piece)
@@ -40,7 +50,7 @@ class Terrain:
     def ajouter_pion(self, pion):
         self.listepions.append(pion)
 
-    def changer_etape(self, fenetreDeJeu):
+    def changer_etape(self):
         if self.etape_de_jeu == 0:
             self.etape_de_jeu = 1
             for pion in self.listepions:
@@ -52,7 +62,8 @@ class Terrain:
             for pion in self.listepions:
                 if pion.equipe == "rouge":
                     pion.couleur = "#FF9090"
-            fenetreDeJeu.canvas.style.background = "#9090FF"
+            self.fenetre.canvas.style.background = "#9090FF"
+            self.score.valeur_score[2] -= 1
         elif self.etape_de_jeu == 2:
             for pion in self.listepions:
                 if pion.equipe == "bleu":
@@ -63,7 +74,9 @@ class Terrain:
             for pion in self.listepions:
                 if pion.equipe == "bleu":
                     pion.couleur = "#9090FF"
-            fenetreDeJeu.canvas.style.background = "#FF9090"
+            self.fenetre.canvas.style.background = "#FF9090"
+            self.score.valeur_score[2] -= 1
+        self.score.calculer(self.listepions)
 
     def detectionPieceClique(self, mx, my):
         # Niveau 2
@@ -101,7 +114,7 @@ class Terrain:
                             # Deplacement de la pièce
                             piece.setPiece(piece_cible, piece_cible.getTop(self.listepieces).niveau + 1)
                             piece_cible_trouvee = True
-                            self.changer_etape(self.fenetre)
+                            self.changer_etape()
                             break
                 if not piece_cible_trouvee:
                     piece.setPiece(piece, piece.niveau)
@@ -121,7 +134,7 @@ class Terrain:
                             pion.case = piece_cible.getBase(self.listepieces)
                             piece_cible.getBase(self.listepieces).pion = pion
                             piece_cible_trouvee = True
-                            self.changer_etape(self.fenetre)
+                            self.changer_etape()
                             break
                 if not piece_cible_trouvee:
                     pion.move(pion.case.pos[0], pion.case.pos[1] + self.radius)
@@ -154,7 +167,9 @@ class Terrain:
                     
         # Pions
         for pion in self.listepions:
-            pion.draw()
+            pion.draw(self.listepieces)
+        # Score
+        self.score.draw()
         # Pièce en déplacement
         for piece in self.listepieces:
             if piece.deplacement:

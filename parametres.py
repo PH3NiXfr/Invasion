@@ -1,7 +1,8 @@
 from browser import document, html, window
 
 parametresDeJeu = {
-    "nombreDePion": 4
+    "nombreDePion": 4,
+    "nombreDeTours": 20
 }
 
 # Création du bouton "Paramètres"
@@ -10,7 +11,7 @@ class boutonParam:
         self.img = html.IMG(src="images/reglage.png")
         self.fenetreDeJeu = fenetreDeJeu
         # Position et taille du bouton
-        self.x, self.y = 0, 0
+        self.x, self.y = window.innerWidth / 100, window.innerWidth / 100
         self.w, self.h = window.innerWidth / 15, window.innerWidth / 15
         
         self.fenetreParam = fenetreParam(nouvelle_partie)
@@ -22,7 +23,12 @@ class boutonParam:
 
     # Dessiner le bouton quand l’image est prête
     def draw(self, ev=None):
-        self.fenetreDeJeu.ctx.drawImage(self.img, self.x, self.y, self.w, self.h)
+        self.fenetreDeJeu.ctx.drawImage(self.img, self.x, self.y, self.w/2, self.h/2)
+    
+    def resize(self):
+        self.x, self.y = window.innerWidth / 100, window.innerWidth / 100
+        self.w, self.h = window.innerWidth / 15, window.innerWidth / 15
+        self.fenetreParam.resize()
 
     # Détection clic
     def on_click(self, ev):
@@ -48,41 +54,122 @@ class boutonParam:
 
 class fenetreParam:
     def __init__(self, nouvelle_partie):
-        # Création de la fenêtre de paramètres (cachée par défaut)
-        self.fenetre_params = html.DIV(
-            style={
-                "position": "absolute",
-                "width": "300px",
-                "height": "200px",
-                "background": "#eee",
-                "border": "2px solid #333",
-                "padding": "10px",
-                "display": "none",  # cachée au départ
-                "top": "50px",
-                "left": "50px",
-                "z-index": "1000"
-            }
-        )
+        screen_w = window.innerWidth
+        screen_h = window.innerHeight
+        new_size = min(screen_w, screen_h)
+
+        self.fenetre_params = html.DIV()
+
+        # Style général de la fenêtre
+        self.fenetre_params.style.background = "#88FF88"
+        self.fenetre_params.style.width = f"{new_size}px"
+        self.fenetre_params.style.height = f"{new_size}px"
+        self.fenetre_params.style.position = "absolute"
+        self.fenetre_params.style.left = f"{(screen_w - new_size)/2}px"
+        self.fenetre_params.style.top  = f"{(screen_h - new_size)/2}px"
+        self.fenetre_params.style.padding  = "20px"
+        self.fenetre_params.style.display  = "none"
+        self.fenetre_params.style.textAlign = "center"
+        self.fenetre_params.style.fontFamily = "Arial, sans-serif"
         document <= self.fenetre_params
 
         # Ajout du contenu à la fenêtre
-        self.fenetre_params <= html.H3("Paramètres du jeu")
+        titre = html.H1("Paramètres du jeu")
+        titre.style.marginBottom = "30px"
+        self.fenetre_params <= titre
 
-        # Input Vitesse
-        self.fenetre_params <= html.LABEL("Nombre de pion : ")
-        self.input_nbPoins = html.INPUT(type="number", min=3, max=6, step=1, value=parametresDeJeu["nombreDePion"])
+        # Input Nombre de pions
+        label = html.LABEL("Nombre de pions : ")
+        label.style.fontSize = "18px"
+        self.fenetre_params <= label
+
+        self.input_nbPoins = html.INPUT(
+            type="number",
+            min=3,
+            max=6,
+            step=1,
+            value=parametresDeJeu["nombreDePion"]
+        )
+        self.input_nbPoins.style.fontSize = "18px"
+        self.input_nbPoins.style.margin = "10px"
         self.fenetre_params <= self.input_nbPoins
         self.fenetre_params <= html.BR()
 
-        # Bouton appliquer
-        self.appliquer = html.BUTTON("Appliquer")
-        self.fenetre_params <= self.appliquer
+        # Input Nombre de tours
+        label = html.LABEL("Nombre de tours : ")
+        label.style.fontSize = "18px"
+        self.fenetre_params <= label
 
-        # Bouton fermer
-        self.fermer = html.BUTTON("Fermer", style={"margin-left": "10px"})
+        self.input_nbTours = html.INPUT(
+            type="number",
+            min=5,
+            max=100,
+            step=1,
+            value=parametresDeJeu["nombreDeTours"]
+        )
+        self.input_nbTours.style.fontSize = "18px"
+        self.input_nbTours.style.margin = "10px"
+        self.fenetre_params <= self.input_nbTours
+        self.fenetre_params <= html.BR()
+
+        # Choix de l'équipe qui commence
+        label_equipe = html.LABEL("Équipe qui commence : ")
+        label_equipe.style.fontSize = "18px"
+        self.fenetre_params <= label_equipe
+
+        self.select_equipe = html.SELECT()
+        self.select_equipe.style.fontSize = "18px"
+        self.select_equipe.style.margin = "10px"
+        self.select_equipe <= html.OPTION("Rouge", value="rouge", selected=True)
+        self.select_equipe <= html.OPTION("Bleu", value="bleu")
+
+        self.fenetre_params <= self.select_equipe
+        self.fenetre_params <= html.BR()
+
+        # Bouton Appliquer
+        self.appliquer = html.BUTTON("Appliquer")
+        self.appliquer.style.fontSize = "18px"
+        self.appliquer.style.padding = "12px 24px"
+        self.appliquer.style.margin = "15px"
+        self.appliquer.style.border = "none"
+        self.appliquer.style.borderRadius = "8px"
+        self.appliquer.style.background = "#4CAF50"
+        self.appliquer.style.color = "white"
+        self.appliquer.style.cursor = "pointer"
+
+        # Bouton Fermer
+        self.fermer = html.BUTTON("Fermer")
+        self.fermer.style.fontSize = "18px"
+        self.fermer.style.padding = "12px 24px"
+        self.fermer.style.margin = "15px"
+        self.fermer.style.border = "none"
+        self.fermer.style.borderRadius = "8px"
+        self.fermer.style.background = "#F44336"
+        self.fermer.style.color = "white"
+        self.fermer.style.cursor = "pointer"
+
+        self.fenetre_params <= self.appliquer
         self.fenetre_params <= self.fermer
 
         self.creeEvent(nouvelle_partie)
+    
+    def resize(self):
+        print("test")
+        screen_w = window.innerWidth
+        screen_h = window.innerHeight
+        new_size = min(screen_w, screen_h)
+
+        self.fenetre_params.style.background = "#88FF88"
+        self.fenetre_params.style.width = f"{new_size}px"
+        self.fenetre_params.style.height = f"{new_size}px"
+        self.fenetre_params.style.position = "absolute"
+        self.fenetre_params.style.left = f"{(screen_w - new_size)/2}px"
+        self.fenetre_params.style.top  = f"{(screen_h - new_size)/2}px"
+        self.fenetre_params.style.padding  = "20px"
+        self.fenetre_params.style.display  = "none"
+        self.fenetre_params.style.textAlign = "center"
+        self.fenetre_params.style.fontFamily = "Arial, sans-serif"
+        document <= self.fenetre_params
 
     # Fonctions
     def ouvrir_params(self, ev):
@@ -95,6 +182,7 @@ class fenetreParam:
         global parametresDeJeu
         # Récupère les valeurs et les stocke
         parametresDeJeu["nombreDePion"] = float(self.input_nbPoins.value)
+        parametresDeJeu["nombreDeTours"] = float(self.input_nbTours.value)
         self.fermer_params(ev)
         nouvelle_partie()
 
