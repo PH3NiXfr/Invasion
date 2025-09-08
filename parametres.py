@@ -102,9 +102,9 @@ class fenetreParam:
 
         self.input_nbTours = html.INPUT(
             type="number",
-            min=5,
+            min=6,
             max=100,
-            step=1,
+            step=2,
             value=parametresDeJeu["nombreDeTours"]
         )
         self.input_nbTours.style.fontSize = "18px"
