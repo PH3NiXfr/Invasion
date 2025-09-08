@@ -10,13 +10,40 @@ img_ocean = html.IMG(src="images/ocean.png")
 
 # Classe pièce
 class Piece:
-    def __init__(self, ex, ey, niveau, radius, fenetreDeJeu):
-        self.radius = radius
-        self.fenetre = fenetreDeJeu
-        self.points = []
+    def __init__(self, px, py, rx, ry, niveau, radius, fenetreDeJeu):
         self.deplacement = False
-        self.niveau = niveau
         self.pion = None
+        self.fenetre = fenetreDeJeu
+        self.radius = radius
+        self.niveau = niveau
+        self.px = px
+        self.py = py
+        self.ry = ry
+        self.rx = rx
+        self.setPiece(self,self.niveau)
+
+    # Déplacement d'une pièce de manière relative
+    def move(self, new_x, new_y):
+        dx = new_x - self.points[0][0]
+        dy = new_y - self.points[0][1]
+        self.points = [(x + dx + self.radius, y + dy - self.radius/2) for x, y in self.points]
+    
+    # Déplacement d'une pièce à une position spécifique
+    def setPiece(self, pieceCible, niveau):
+        self.niveau = niveau
+        self.ry = pieceCible.ry
+        self.rx = pieceCible.rx
+        self.px = pieceCible.px
+        self.py = pieceCible.py
+        if self.niveau == 0:
+            self.dy = 0
+        elif self.niveau == 1:
+            self.dy = self.radius/10
+        elif self.niveau == 2:
+            self.dy = (self.radius/10)*2
+        self.ex = pieceCible.px + self.ry * self.radius * 0.85
+        self.ey = (pieceCible.py - self.ry * self.radius * 1.5) + self.ry*1.8 - self.dy
+        self.points = []
         if niveau == 0:
             self.image = img_ocean
         elif niveau == 1:
@@ -26,33 +53,11 @@ class Piece:
         # Calcul des points de l'hexagone
         for i in range(6):
             angle = math.pi / 3 * i - math.pi / 6  # rotation pour que l'hexagone pointe vers le haut
-            x = ex + self.radius * math.cos(angle)
-            y = ey + self.radius * math.sin(angle)
+            x = self.ex + self.radius * math.cos(angle)
+            y = self.ey + self.radius * math.sin(angle)
             self.points.append((x, y))
         self.pos = (x, y)
-
-    # Déplacement d'une pièce de manière relative
-    def move(self, new_x, new_y):
-        dx = new_x - self.points[0][0]
-        dy = new_y - self.points[0][1]
-        self.points = [(x + dx + self.radius, y + dy - self.radius/2) for x, y in self.points]
-    
-    # Déplacement d'une pièce à une position spécifique
-    def setPiece(self, new_x, new_y, niveau):
-        self.points = []
-        for i in range(6):
-            angle = math.pi / 3 * i - math.pi / 6
-            x = new_x + self.radius * math.cos(angle)
-            y = new_y + self.radius * math.sin(angle)
-            self.points.append((x, y + self.radius))
-        self.pos = (new_x, new_y)
-        if niveau == 0:
-            self.image = img_ocean
-        elif niveau == 1:
-            self.image = img_plaine
-        elif niveau == 2:
-            self.image = img_montagne
-        self.niveau = niveau
+        self.relPos = (self.rx, self.ry)
     
     # Détection collision point dans polygone
     def iscollision(self, mx, my):
@@ -96,13 +101,13 @@ class Piece:
     # Recupération de la piece à la base
     def getBase(self, listepieces):
         for piece in listepieces:
-            if piece.niveau == 0 and self.pos == piece.pos:
+            if piece.niveau == 0 and self.relPos == piece.relPos:
                 return piece
             
     # Recupération de la piece au sommet
     def getTop(self, listepieces):
         piece_max = self
         for piece in listepieces:
-            if self.pos == piece.pos and piece.niveau > piece_max.niveau:
+            if self.relPos == piece.relPos and piece.niveau > piece_max.niveau:
                 piece_max = piece
         return piece_max

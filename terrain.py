@@ -20,18 +20,18 @@ class Terrain:
             for j in range(max(-i, -self.tailleDuTerrain), min(self.tailleDuTerrain + 1, self.tailleDuTerrain*2 - i + 1)):
                 # Pieces du haut + pion rouge
                 if j == self.tailleDuTerrain:
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 0, self.radius, self.fenetre))
+                    self.ajouter_piece(piece.Piece(cx, cy, i, j, 0, self.radius, self.fenetre))
                     self.ajouter_pion(pion.Pion(self.listepieces[len(self.listepieces)-1], "rouge", self.radius, self.fenetre))
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 1, self.radius, self.fenetre))
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 2, self.radius, self.fenetre))
+                    self.ajouter_piece(piece.Piece(cx, cy, i, j, 1, self.radius, self.fenetre))
+                    self.ajouter_piece(piece.Piece(cx, cy, i, j, 2, self.radius, self.fenetre))
                 # Pieces du bas + pion bleu
                 elif j == -self.tailleDuTerrain:
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 0, self.radius, self.fenetre))
+                    self.ajouter_piece(piece.Piece(cx, cy, i, j, 0, self.radius, self.fenetre))
                     self.ajouter_pion(pion.Pion(self.listepieces[len(self.listepieces)-1], "bleu", self.radius, self.fenetre))
                 # Pieces du milieu
                 else:
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 0, self.radius, self.fenetre))
-                    self.ajouter_piece(piece.Piece(cx + j * self.radius * 0.85, cy - j * self.radius * 1.5, 1, self.radius, self.fenetre))
+                    self.ajouter_piece(piece.Piece(cx, cy, i, j, 0, self.radius, self.fenetre))
+                    self.ajouter_piece(piece.Piece(cx, cy, i, j, 1, self.radius, self.fenetre))
             cx += self.radius * 0.85 * 2
 
     def ajouter_piece(self, piece):
@@ -99,12 +99,12 @@ class Terrain:
                     if piece_cible.getTop(self.listepieces).niveau < 2 and piece.getTop(self.listepieces) != piece_cible.getTop(self.listepieces):
                         if piece_cible.iscollision(mx, my):
                             # Deplacement de la pièce
-                            piece.setPiece(piece_cible.pos[0], piece_cible.pos[1], piece_cible.getTop(self.listepieces).niveau + 1)
+                            piece.setPiece(piece_cible, piece_cible.getTop(self.listepieces).niveau + 1)
                             piece_cible_trouvee = True
                             self.changer_etape(self.fenetre)
                             break
                 if not piece_cible_trouvee:
-                    piece.setPiece(piece.pos[0], piece.pos[1], piece.niveau)
+                    piece.setPiece(piece, piece.niveau)
                 piece.deplacement = False
     
     # Detection du pion relâché
@@ -129,17 +129,29 @@ class Terrain:
     
     # Dessin du jeu
     def draw(self, boutonParam):
-        # Pieces
         self.fenetre.ctx.clearRect(0, 0, self.fenetre.canvas.width, self.fenetre.canvas.height)
+        # Pieces
+        piecesN0, piecesN1, piecesN2  = [], [], []
         for piece in self.listepieces:
-            if piece.niveau == 0 and not piece.deplacement:
-                piece.draw()
-        for piece in self.listepieces:
-            if piece.niveau == 1 and not piece.deplacement:
-                piece.draw()
-        for piece in self.listepieces:
-            if piece.niveau == 2 and not piece.deplacement:
-                piece.draw()
+            if not piece.deplacement:
+                if piece.niveau == 0:
+                    piecesN0.append(piece)
+                elif piece.niveau == 1:
+                    piecesN1.append(piece)
+                elif piece.niveau == 2:
+                    piecesN2.append(piece)
+
+        for i in range((self.tailleDuTerrain)*2+1):
+            for piece in piecesN0:
+                if self.tailleDuTerrain - i == piece.ry:
+                    piece.draw()
+            for piece in piecesN1:
+                if self.tailleDuTerrain - i == piece.ry:
+                    piece.draw()
+            for piece in piecesN2:
+                if self.tailleDuTerrain - i == piece.ry:
+                    piece.draw()
+                    
         # Pions
         for pion in self.listepions:
             pion.draw()
