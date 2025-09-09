@@ -13,6 +13,7 @@ class Terrain:
         self.listepieces = []
         self.listepions = []
         self.etape_de_jeu = 0
+        self.victoire = 0
         self.tailleDuTerrain = int(parametres.parametresDeJeu["nombreDePion"]) - 1
         self.score.valeur_score[2] = int(parametres.parametresDeJeu["nombreDeTours"]) + 1
         self.radius = self.fenetre.canvas.width / (self.tailleDuTerrain * 4 + 2)
@@ -43,19 +44,21 @@ class Terrain:
             self.etape_de_jeu = 1
             self.changer_etape()
 
-
     def ajouter_piece(self, piece):
         self.listepieces.append(piece)
 
     def ajouter_pion(self, pion):
         self.listepions.append(pion)
 
+    # Etapes de jeu
     def changer_etape(self):
+        # Déplacement piece joueur rouge
         if self.etape_de_jeu == 0:
             self.etape_de_jeu = 1
             for pion in self.listepions:
                 if pion.equipe == "rouge":
                     pion.couleur = "#FF0000"
+        # Déplacement pion joueur rouge
         elif self.etape_de_jeu == 1:
             self.etape_de_jeu = 2
             # Changer la couleur du canvas
@@ -64,11 +67,22 @@ class Terrain:
                     pion.couleur = "#FF9090"
             self.fenetre.canvas.style.background = "#9090FF"
             self.score.valeur_score[2] -= 1
+            # Condition de fin de jeu
+            if self.score.valeur_score[2] <= 0:
+                self.score.calculer(self.listepions)
+                if self.score.valeur_score[0] > self.score.valeur_score[1]:
+                    self.victoire = 1
+                elif self.score.valeur_score[0] < self.score.valeur_score[1]:
+                    self.victoire = 2
+                else:
+                    self.victoire = 3
+        # Déplacement piece joueur bleu
         elif self.etape_de_jeu == 2:
             for pion in self.listepions:
                 if pion.equipe == "bleu":
                     pion.couleur = "#0000FF"
             self.etape_de_jeu = 3
+        # Déplacement pion joueur bleu
         else:
             self.etape_de_jeu = 0
             for pion in self.listepions:
@@ -76,8 +90,18 @@ class Terrain:
                     pion.couleur = "#9090FF"
             self.fenetre.canvas.style.background = "#FF9090"
             self.score.valeur_score[2] -= 1
+            # Condition de fin de jeu
+            if self.score.valeur_score[2] <= 0:
+                self.score.calculer(self.listepions)
+                if self.score.valeur_score[0] > self.score.valeur_score[1]:
+                    self.victoire = 1
+                elif self.score.valeur_score[0] < self.score.valeur_score[1]:
+                    self.victoire = 2
+                else:
+                    self.victoire = 3
         self.score.calculer(self.listepions)
 
+    # Deplacement d'une piece
     def detectionPieceClique(self, mx, my):
         # Niveau 2
         for piece in self.listepieces:
@@ -95,6 +119,7 @@ class Terrain:
                         self.deplacement_piece = True
                         break
 
+    # Deplacement d'un pion
     def detectionPionClique(self, mx, my):
         for pion in self.listepions:
             if pion.case.iscollision(mx, my):
@@ -168,8 +193,10 @@ class Terrain:
         # Pions
         for pion in self.listepions:
             pion.draw(self.listepieces)
+
         # Score
-        self.score.draw()
+        self.score.draw(self.victoire)
+        
         # Pièce en déplacement
         for piece in self.listepieces:
             if piece.deplacement:

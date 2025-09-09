@@ -3,9 +3,7 @@ import math
 
 # Chargement des images
 img_montagne = html.IMG(src="images/montagne.png")
-
 img_plaine = html.IMG(src="images/plaine.png")
-
 img_ocean = html.IMG(src="images/ocean.png")
 
 # Classe pièce
@@ -52,7 +50,7 @@ class Piece:
             self.image = img_montagne
         # Calcul des points de l'hexagone
         for i in range(6):
-            angle = math.pi / 3 * i - math.pi / 6  # rotation pour que l'hexagone pointe vers le haut
+            angle = math.pi / 3 * i - math.pi / 6
             x = self.ex + self.radius * math.cos(angle)
             y = self.ey + self.radius * math.sin(angle)
             self.points.append((x, y))

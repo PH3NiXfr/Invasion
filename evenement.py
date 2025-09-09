@@ -10,12 +10,13 @@ def on_mouse_down(ev, terrain, fenetre):
     mx = (ev.clientX - rect.left)*(400/fenetre.vraisTaille)
     my = (ev.clientY - rect.top)*(400/fenetre.vraisTaille)
     # Etape de jeu
-    if terrain.etape_de_jeu  == 0 or terrain.etape_de_jeu  == 2:
-        # Detection de la pièce cliquée
-        terrain.detectionPieceClique(mx, my)
-    else:
-        # Detection du pion cliqué
-        terrain.detectionPionClique(mx, my)
+    if terrain.victoire == 0:
+        if terrain.etape_de_jeu  == 0 or terrain.etape_de_jeu  == 2:
+            # Detection de la pièce cliquée
+            terrain.detectionPieceClique(mx, my)
+        else:
+            # Detection du pion cliqué
+            terrain.detectionPionClique(mx, my)
 
 # Souris relâchée
 def on_mouse_up(ev, terrain, fenetre):

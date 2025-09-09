@@ -1,5 +1,6 @@
 from browser import document, html, window
 
+# Paramètres
 parametresDeJeu = {
     "nombreDePion": 4,
     "nombreDeTours": 20
@@ -10,14 +11,13 @@ class boutonParam:
     def __init__(self, fenetreDeJeu, nouvelle_partie):
         self.img = html.IMG(src="images/reglage.png")
         self.fenetreDeJeu = fenetreDeJeu
-        # Position et taille du bouton
+        # Position, taille du bouton et image
         self.x, self.y = window.innerWidth / 100, window.innerWidth / 100
         self.w, self.h = window.innerWidth / 15, window.innerWidth / 15
-        
-        self.fenetreParam = fenetreParam(nouvelle_partie)
-
         self.img.bind("load", self.draw)
         
+        # Fenetre
+        self.fenetreParam = fenetreParam(nouvelle_partie)
         self.fenetreDeJeu.canvas.bind("click", self.on_click)
         self.fenetreDeJeu.canvas.bind("touchstart", self.on_touch)
 
@@ -25,6 +25,7 @@ class boutonParam:
     def draw(self, ev=None):
         self.fenetreDeJeu.ctx.drawImage(self.img, self.x, self.y, self.w/2, self.h/2)
     
+    # Modification de la taille de la fenetre des paramètres
     def resize(self):
         self.x, self.y = window.innerWidth / 100, window.innerWidth / 100
         self.w, self.h = window.innerWidth / 15, window.innerWidth / 15
@@ -38,9 +39,8 @@ class boutonParam:
     
     # Détection touch
     def on_touch(self, ev):
-        ev.preventDefault()  # empêche le scroll / zoom lors du touch
-        touch = ev.touches[0]  # prendre le premier doigt
-        # Calculer la position relative au canvas
+        ev.preventDefault()
+        touch = ev.touches[0]
         rect = self.fenetreDeJeu.canvas.getBoundingClientRect()
         mx = touch.clientX - rect.left
         my = touch.clientY - rect.top
@@ -50,14 +50,14 @@ class boutonParam:
     def _check_click(self, mx, my):
         if self.x <= mx <= self.x+self.w*1.5 and self.y <= my <= self.y+self.h*1.5:
             self.fenetreParam.ouvrir_params(None)
-    
 
+# Fenetre des paramètres
 class fenetreParam:
     def __init__(self, nouvelle_partie):
+        # Données
         screen_w = window.innerWidth
         screen_h = window.innerHeight
         new_size = min(screen_w, screen_h)
-
         self.fenetre_params = html.DIV()
 
         # Style général de la fenêtre
@@ -73,12 +73,12 @@ class fenetreParam:
         self.fenetre_params.style.fontFamily = "Arial, sans-serif"
         document <= self.fenetre_params
 
-        # Ajout du contenu à la fenêtre
+        # Titre
         titre = html.H1("Paramètres du jeu")
         titre.style.marginBottom = "30px"
         self.fenetre_params <= titre
 
-        # Input Nombre de pions
+        # Nombre de pions
         label = html.LABEL("Nombre de pions : ")
         label.style.fontSize = "18px"
         self.fenetre_params <= label
@@ -95,7 +95,7 @@ class fenetreParam:
         self.fenetre_params <= self.input_nbPoins
         self.fenetre_params <= html.BR()
 
-        # Input Nombre de tours
+        # Nombre de tours
         label = html.LABEL("Nombre de tours : ")
         label.style.fontSize = "18px"
         self.fenetre_params <= label
@@ -153,8 +153,8 @@ class fenetreParam:
 
         self.creeEvent(nouvelle_partie)
     
+    # Modification de la taille de la fenetre
     def resize(self):
-        print("test")
         screen_w = window.innerWidth
         screen_h = window.innerHeight
         new_size = min(screen_w, screen_h)
@@ -171,7 +171,7 @@ class fenetreParam:
         self.fenetre_params.style.fontFamily = "Arial, sans-serif"
         document <= self.fenetre_params
 
-    # Fonctions
+    # Action des boutons
     def ouvrir_params(self, ev):
         self.fenetre_params.style.display = "block"
 
@@ -186,7 +186,7 @@ class fenetreParam:
         self.fermer_params(ev)
         nouvelle_partie()
 
-    # Liaisons
+    # Event
     def creeEvent(self, nouvelle_partie):
         self.fermer.bind("click", lambda ev: self.fermer_params(ev))
         self.appliquer.bind("click", lambda ev: self.appliquer_params(ev, nouvelle_partie))

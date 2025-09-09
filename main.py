@@ -1,16 +1,20 @@
 from browser import timer, window, bind
 import fenetre, terrain, evenement, parametres
 
+# Création de la fenetre
 fenetreDeJeu = fenetre.Fenetre()
-score = fenetre.Score(fenetreDeJeu)
 fenetreDeJeu.resize()
 
+# Réinitailisation du jeu
 def nouvelle_partie():
     global fenetreDeJeu, terrainDeJeu, boutonParam
+    # recréation du terrain
     terrainDeJeu.constructionTerrain()
-    # Création d'une fenetre, d'un terrain et des événement
+    # recréation des événement
     evenement.creer_evenement(terrainDeJeu, fenetreDeJeu)
 
+# Création des éléments du jeu
+score = fenetre.Score(fenetreDeJeu, nouvelle_partie)
 boutonParam = parametres.boutonParam(fenetreDeJeu, nouvelle_partie)
 terrainDeJeu = terrain.Terrain(fenetreDeJeu, boutonParam, score)
 
