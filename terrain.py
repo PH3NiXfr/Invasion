@@ -57,14 +57,14 @@ class Terrain:
             self.etape_de_jeu = 1
             for pion in self.listepions:
                 if pion.equipe == "rouge":
-                    pion.couleur = "#FF0000"
+                    pion.gris = False
         # Déplacement pion joueur rouge
         elif self.etape_de_jeu == 1:
             self.etape_de_jeu = 2
             # Changer la couleur du canvas
             for pion in self.listepions:
                 if pion.equipe == "rouge":
-                    pion.couleur = "#FF9090"
+                    pion.gris = True
             self.fenetre.canvas.style.background = "#9090FF"
             self.score.valeur_score[2] -= 1
             # Condition de fin de jeu
@@ -80,14 +80,14 @@ class Terrain:
         elif self.etape_de_jeu == 2:
             for pion in self.listepions:
                 if pion.equipe == "bleu":
-                    pion.couleur = "#0000FF"
+                    pion.gris = False
             self.etape_de_jeu = 3
         # Déplacement pion joueur bleu
         else:
             self.etape_de_jeu = 0
             for pion in self.listepions:
                 if pion.equipe == "bleu":
-                    pion.couleur = "#9090FF"
+                    pion.gris = True
             self.fenetre.canvas.style.background = "#FF9090"
             self.score.valeur_score[2] -= 1
             # Condition de fin de jeu
@@ -107,17 +107,19 @@ class Terrain:
         for piece in self.listepieces:
             if piece.niveau == 2 and piece.getBase(self.listepieces).pion is None:
                 if piece.iscollision(mx, my):
-                    piece.deplacement = True
-                    self.deplacement_piece = True
-                    break
+                    if not piece.getBase(self.listepieces).lastAction:
+                        piece.deplacement = True
+                        self.deplacement_piece = True
+                        break
         # Niveau 1
         if not self.deplacement_piece:
             for piece in self.listepieces:
                 if piece.niveau == 1 and piece.getBase(self.listepieces).pion is None:
                     if piece.iscollision(mx, my):
-                        piece.deplacement = True
-                        self.deplacement_piece = True
-                        break
+                        if not piece.getBase(self.listepieces).lastAction:
+                            piece.deplacement = True
+                            self.deplacement_piece = True
+                            break
 
     # Deplacement d'un pion
     def detectionPionClique(self, mx, my):
@@ -137,10 +139,16 @@ class Terrain:
                     if piece_cible.getTop(self.listepieces).niveau < 2 and piece.getTop(self.listepieces) != piece_cible.getTop(self.listepieces):
                         if piece_cible.iscollision(mx, my):
                             # Deplacement de la pièce
-                            piece.setPiece(piece_cible, piece_cible.getTop(self.listepieces).niveau + 1)
-                            piece_cible_trouvee = True
-                            self.changer_etape()
-                            break
+                            if not piece_cible.getBase(self.listepieces).lastAction:
+                                for pieceAction in self.listepieces:
+                                    if pieceAction.lastAction:
+                                        pieceAction.getBase(self.listepieces).lastAction = False
+                                piece.getBase(self.listepieces).lastAction = True
+                                piece_cible.getBase(self.listepieces).lastAction = True
+                                piece.setPiece(piece_cible, piece_cible.getTop(self.listepieces).niveau + 1)
+                                piece_cible_trouvee = True
+                                self.changer_etape()
+                                break
                 if not piece_cible_trouvee:
                     piece.setPiece(piece, piece.niveau)
                 piece.deplacement = False
@@ -182,13 +190,13 @@ class Terrain:
         for i in range((self.tailleDuTerrain)*2+1):
             for piece in piecesN0:
                 if self.tailleDuTerrain - i == piece.ry:
-                    piece.draw()
+                    piece.draw(self.listepieces)
             for piece in piecesN1:
                 if self.tailleDuTerrain - i == piece.ry:
-                    piece.draw()
+                    piece.draw(self.listepieces)
             for piece in piecesN2:
                 if self.tailleDuTerrain - i == piece.ry:
-                    piece.draw()
+                    piece.draw(self.listepieces)
                     
         # Pions
         for pion in self.listepions:
@@ -200,5 +208,5 @@ class Terrain:
         # Pièce en déplacement
         for piece in self.listepieces:
             if piece.deplacement:
-                piece.draw()
+                piece.draw(self.listepieces)
         boutonParam.draw()

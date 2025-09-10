@@ -18,6 +18,7 @@ class Piece:
         self.py = py
         self.ry = ry
         self.rx = rx
+        self.lastAction = False
         self.setPiece(self,self.niveau)
 
     # Déplacement d'une pièce de manière relative
@@ -70,7 +71,7 @@ class Piece:
         return inside 
     
     # Dessin d'une pièce
-    def draw(self):
+    def draw(self, listepieces):
         self.fenetre.ctx.beginPath()
         self.fenetre.ctx.moveTo(self.points[0][0], self.points[0][1])
         for x, y in self.points[1:]:
@@ -93,6 +94,9 @@ class Piece:
         self.fenetre.ctx.imageSmoothingEnabled = True
         self.fenetre.ctx.imageSmoothingQuality = "high"
         self.fenetre.ctx.drawImage(self.image, min_x, min_y, max_x-min_x, max_y-min_y)
+        if self.getBase(listepieces).lastAction:
+            self.fenetre.ctx.fillStyle = "rgba(100, 100, 100, 0.4)"
+            self.fenetre.ctx.fillRect(min_x, min_y, max_x-min_x, max_y-min_y)
 
         self.fenetre.ctx.restore()
     
