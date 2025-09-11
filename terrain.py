@@ -68,7 +68,7 @@ class Terrain:
             self.fenetre.canvas.style.background = "#9090FF"
             self.score.valeur_score[2] -= 1
             # Condition de fin de jeu
-            if self.score.valeur_score[2] <= 0:
+            if self.score.valeur_score[2] <= 0 or self.score.valeur_score[1] >= self.tailleDuTerrain*2*len(self.listepions)/2 or self.score.valeur_score[0] >= self.tailleDuTerrain*2*len(self.listepions)/2:
                 self.score.calculer(self.listepions)
                 if self.score.valeur_score[0] > self.score.valeur_score[1]:
                     self.victoire = 1
@@ -91,7 +91,7 @@ class Terrain:
             self.fenetre.canvas.style.background = "#FF9090"
             self.score.valeur_score[2] -= 1
             # Condition de fin de jeu
-            if self.score.valeur_score[2] <= 0:
+            if self.score.valeur_score[2] <= 0 or self.score.valeur_score[1] >= self.tailleDuTerrain*2*len(self.listepions)/2 or self.score.valeur_score[0] >= self.tailleDuTerrain*2*len(self.listepions)/2:
                 self.score.calculer(self.listepions)
                 if self.score.valeur_score[0] > self.score.valeur_score[1]:
                     self.victoire = 1
