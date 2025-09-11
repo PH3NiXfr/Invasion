@@ -159,16 +159,19 @@ class Terrain:
             if pion.deplacement:
                 piece_cible_trouvee = False
                 for piece_cible in self.listepieces:
-                    if pion.equipe == "rouge" and piece_cible.getTop(self.listepieces).niveau == 2 or pion.equipe == "bleu" and piece_cible.getTop(self.listepieces).niveau == 0:
-                        if piece_cible.iscollision(mx, my) and piece_cible.getBase(self.listepieces).pion is None and \
-                            (math.sqrt((pion.case.pos[0] - piece_cible.pos[0])**2 + (pion.case.pos[1] - piece_cible.pos[1])**2) < self.radius * 2):
-                            # Deplacement du pion
-                            pion.case.pion = None
-                            pion.case = piece_cible.getBase(self.listepieces)
-                            piece_cible.getBase(self.listepieces).pion = pion
-                            piece_cible_trouvee = True
-                            self.changer_etape()
-                            break
+                    if (pion.equipe == "rouge" and piece_cible.getTop(self.listepieces).niveau == 2) or (pion.equipe == "bleu" and piece_cible.getTop(self.listepieces).niveau == 0):
+                        if piece_cible.iscollision(mx, my) and piece_cible.getBase(self.listepieces).pion is None:
+                            if ((math.sqrt((pion.case.pos[0] - piece_cible.pos[0])**2 + (pion.case.pos[1] - piece_cible.pos[1])**2) < self.radius * 2) or \
+                                # déplacement à travers les bouts du terrain
+                                ((pion.case.relPos[0] == 0 and piece_cible.relPos[0] + piece_cible.relPos[1] == self.tailleDuTerrain*2) or (piece_cible.relPos[0] == 0 and pion.case.relPos[0] + pion.case.relPos[1] == self.tailleDuTerrain*2)) or \
+                                ((pion.case.relPos[0] == self.tailleDuTerrain*2 and piece_cible.relPos[0] == - piece_cible.relPos[1]) or (piece_cible.relPos[0] == self.tailleDuTerrain*2 and pion.case.relPos[0] == - pion.case.relPos[1]))):
+                                # Deplacement du pion
+                                pion.case.pion = None
+                                pion.case = piece_cible.getBase(self.listepieces)
+                                piece_cible.getBase(self.listepieces).pion = pion
+                                piece_cible_trouvee = True
+                                self.changer_etape()
+                                break
                 if not piece_cible_trouvee:
                     pion.move(pion.case.pos[0], pion.case.pos[1] + self.radius)
                 pion.deplacement = False
